@@ -16,9 +16,6 @@ var DefaultKeySize = "%08d"
 
 type FldMap map[string]string // fieldName=type (str, int, float, date, dateTime, bool, bytes)
 
-// --- Table type --------------------------------------------------------------
-// Contains a collection of Recs and OrderBy slices for retrieving records in a specific order.
-// Each OrderBy contains RecMap keys in the desired order.
 type Table struct {
 	Lock    sync.RWMutex
 	Shared  bool // set to true if multiple goroutines can access simultaneously (unless all readonly)
@@ -29,27 +26,35 @@ type Table struct {
 	OrderBy map[string][]string // key indicates field order (ex. partno)
 }
 
+// StartRead sets Read Lock on table if table is shared.
 func (this *Table) StartRead() {
 	if this.Shared {
 		this.Lock.RLock()
 	}
 }
+
+// EndRead releases Read Lock on table if table is shared.
 func (this *Table) EndRead() {
 	if this.Shared {
 		this.Lock.RUnlock()
 	}
 }
+
+// StartWrite sets Write Lock on table if table is shared.
 func (this *Table) StartWrite() {
 	if this.Shared {
 		this.Lock.Lock()
 	}
 }
+
+// EndWrite releases Write Lock on table if table is shared.
 func (this *Table) EndWrite() {
 	if this.Shared {
 		this.Lock.Unlock()
 	}
 }
 
+// GetRec returns pointer to Rec matching specified key.
 func (this *Table) GetRec(key string) *Rec {
 	rec := this.RecMap[key]
 	return rec
@@ -164,6 +169,7 @@ func (this *Table) Load() int {
 	return len(this.RecMap)
 }
 
+// Load1 loads a single record with matching key
 func (this *Table) Load1(key string) int {
 	this.StartWrite()
 	this.RecMap = make(map[string]*Rec)
@@ -182,7 +188,7 @@ func (this *Table) Load1(key string) int {
 	return len(this.RecMap)
 }
 
-// LoadSome loads Table.RecMap with records where db key matches a key in keys
+// LoadSome loads records where db key matches a key in keys.
 func (this *Table) LoadSome(keys []string) int {
 	this.StartWrite()
 	this.RecMap = make(map[string]*Rec)
@@ -204,8 +210,7 @@ func (this *Table) LoadSome(keys []string) int {
 	return len(this.RecMap)
 }
 
-// LoadRange loads Table.RecMap with all db records where key is in a range, from start to end
-// If loading from a nested bucket, specify path to it
+// LoadRange loads db records where key is in a range, from start to end.
 func (this *Table) LoadRange(start, end string) int {
 	this.StartWrite()
 	this.RecMap = make(map[string]*Rec)
@@ -229,7 +234,7 @@ func (this *Table) LoadRange(start, end string) int {
 	return len(this.RecMap)
 }
 
-// LoadPrefix loads Table.RecMap with all db records where key begins with prefix
+// LoadPrefix loads db records where key begins with prefix.
 func (this *Table) LoadPrefix(prefix string) int {
 	this.StartWrite()
 	this.RecMap = make(map[string]*Rec)
@@ -273,10 +278,9 @@ func (this *Table) Loop(fn func(key string, rec *Rec), orderBy ...[]string) {
 	}
 }
 
-// Save writes added/changed/deleted recs in table.RecMap to database
-// calling func passes db transaction used for every table that needs to be saved for transaction
-// provides all or none (transaction) functionality
-// returns number of records added, changed, and deleted in database
+// Save writes added/changed/deleted recs in table.RecMap to database.
+// Bolt transaction must be provided (use StartDBWrite to get one).
+// Returns number of records saved.
 func (this *Table) Save(tx *bolt.Tx) int {
 	this.StartWrite()
 	var count int
@@ -301,21 +305,24 @@ func (this *Table) Save(tx *bolt.Tx) int {
 	return count
 }
 
+// CreateRecMap creates new RecMap and OrderBy maps.
 func (this *Table) CreateRecMap() {
 	this.RecMap = make(map[string]*Rec)
 	this.OrderBy = make(map[string][]string)
 }
 
+// SetBktPath sets BktPath attribute.
+// Provide separate string values for all parent and target bucket names.
 func (this *Table) SetBktPath(bktPath ...string) {
 	this.BktPath = bktPath
 }
 
+// SetKeySize sets the number of digits in value returned by GetNextKey method.
 func (this *Table) SetKeySize(size int) {
 	this.KeySize = fmt.Sprintf("%s%dd", "%0", size) // size = 5, returns "%05d"
 }
 
-// NewTable creates and inits a new Table
-// For shared parm use constants Shared, NotShared defined at top.
+// NewTable creates and inits a new Table. Returns pointer to it.
 func NewTable(flds FldMap, shared bool, bktPath ...string) *Table {
 	t := &Table{
 		Shared:  shared,

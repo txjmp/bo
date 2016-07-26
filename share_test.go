@@ -37,6 +37,7 @@ func process1() {
 	for i := 0; i < len(keys); i++ {
 		sharedTbl.StartWrite()
 		fmt.Println("process1 write start")
+		time.Sleep(50 * time.Millisecond)
 		sharedTbl.AddRec(keys[i], ValMap{
 			"id":        keys[i],
 			"name":      "Bill",
@@ -55,8 +56,8 @@ func process2() {
 		count++
 		sharedTbl.StartRead()
 		fmt.Println("process2 start, recs=", len(sharedTbl.RecMap))
+		time.Sleep(50 * time.Millisecond)
 		sharedTbl.Loop(display)
-		// add wait here
 		sharedTbl.EndRead()
 		fmt.Println("process2 end")
 	}
@@ -70,8 +71,8 @@ func process3() {
 		count++
 		sharedTbl.StartRead()
 		fmt.Println("process3 start, recs=", len(sharedTbl.RecMap))
+		time.Sleep(20 * time.Millisecond)
 		sharedTbl.Loop(display)
-
 		sharedTbl.EndRead()
 		fmt.Println("process3 end")
 	}
@@ -80,5 +81,5 @@ func process3() {
 }
 
 func display(key string, rec *Rec) {
-	fmt.Println(key, rec.Get("name"))
+	//fmt.Println(key, rec.Get("name"))
 }

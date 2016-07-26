@@ -66,8 +66,8 @@ func Example2() {
 
 	// Output:
 	// ....... Example2 ..........
-	// Customer: Lanco, Lisa -- Amt: 350.49 Date: Jul 25, 2016
-	// Customer: Lanco, Lisa -- Amt: 35.72 Date: Aug 26, 2017
+	// Customer: Lanco, Lisa -- Amt: 350.49 Date: Aug 22, 2016
+	// Customer: Lanco, Lisa -- Amt: 35.72 Date: Sep 23, 2017
 }
 
 // display info for a sale, including name of related customer
@@ -118,21 +118,22 @@ func createSales() {
 	custNdx := NewTable(FldMap{}, NotShared, "sales", "cust_ndx")
 	custNdx.CreateRecMap()
 
+	saleDate, _ := time.Parse(DateFormat, "2016-08-22")
 	data := []input{
 		{
 			id:     sales.GetNextKey(),
 			custId: "0001",
-			date:   time.Now(),
+			date:   saleDate,
 			amt:    350.49,
 		}, {
 			id:     sales.GetNextKey(),
 			custId: "0001",
-			date:   time.Now().AddDate(1, 1, 1),
+			date:   saleDate.AddDate(1, 1, 1),
 			amt:    35.72,
 		}, {
 			id:     sales.GetNextKey(),
 			custId: "0002",
-			date:   time.Now().AddDate(0, 2, 0),
+			date:   saleDate.AddDate(0, 2, 0),
 			amt:    88.33,
 		},
 	}

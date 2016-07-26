@@ -1,10 +1,15 @@
 #Bo - A Frontend For BoltDB
 
-BoltDB is a simple, fast, reliable key:value database. One thing is for sure, its not overburdened with features. If you feel Bolt is a little too bare bones, but don't need all the features or want the complexity of other databases, then you might like Bo. Its primarily a tool for speeding up the development process. 
+[BoltDB](https://github.com/boltdb/bolt) is a simple, fast, reliable key:value database. One thing is for sure, its not overburdened with features. If you feel Bolt is a little too bare bones, but don't need all the features or want the complexity of other databases, then you might like Bo. Its primarily a tool for speeding up the development process. The goal of writing Bo was to provide mind **bo**gglingly easy data management. I can't say that goal was reached, but IMHO it was at least partially achieved.  
   
-The goal of writing Bo was to provide mind __bo__gglingly easy data management. I can't say that goal was reached, but IMHO it was at least partially achieved. To better understand how the pieces fit together, I recommend reading all this document before using Bo. You should also be familiar with [BoltDB](https://github.com/boltdb/bolt).
+**Snippet**
 
-##Quick Example
+	members := NewTable(memberFlds, NotShared, "members")
+	members.Load()
+
+These 2 lines load all the records in the members bucket into a Table object.  Other methods load a selection of records. Once in a Table, it is very easy to sort, iterate through, add, change, and delete records. The Save method saves all changes to the database. Related data in other Tables is also easily accessed.
+  
+##Short Example
 
 	database, _ := bolt.Open("test.db", 0600, nil)
 	bo.Setdb(database)
@@ -33,8 +38,9 @@ The goal of writing Bo was to provide mind __bo__gglingly easy data management. 
 	tblCircles.Save(tx)
 	bo.CommitDBWrite(tx)
 
-	// show values in key order
-	tblCircles.Loop(showCircleVals, tblCircles.OrderBy["key"])
+	// show values in order by color, radius (larger values 1st)
+	tblCircles.CreateOrderBy("color_radius", "color", "radius:d")
+	tblCircles.Loop(showCircleVals, tblCircles.OrderBy["color_radius"])
 	...	
 	func showCircleVals(key string, rec *bo.Rec) {
 		color := rec.Get("color")
@@ -42,7 +48,7 @@ The goal of writing Bo was to provide mind __bo__gglingly easy data management. 
 		fmt.Println(key, color, radius)
 	}
 
-__See following modules for more complete examples__ 
+**See following modules for more complete examples** 
  
 * Example1_test.go
 	* stores and retrieves weather and accident data by location
@@ -109,8 +115,12 @@ To understand Bo, you only have to learn 2 elements.
 	* used by Load, Save, GetNextKey methods
 * Flds: fields defined for recs stored in Table's.RecMap
 	* a map where key is field name and val is field's value type
-	* used by Rec's Get/Set methods and CreateOrderBy
-	* currently Get/Set methods do not use the field type to validate a request
+	* used by Rec's Get/Set methods to validate field name
+	* used by CreateOrderBy to convert stored string value to appropriate type
+	* value types: str, int, float, date, dateTime, bool, bytes
+		* int is int64, float is float64
+		* date uses var DateFormat (yyyy-mm-dd) when converting between string and time.Time
+		* dateTime uses var DateTimeFormat (yyyy-mm-dd hh:mm:ss)
 * RecMap: record container
 	* key is record's database key value
 	* value is pointer to a Rec object
@@ -194,7 +204,7 @@ To understand Bo, you only have to learn 2 elements.
 	* used for Shared tables
 	* see section below on Shared tables  
   
-__Func NewTable(flds FldMap, shared bool, bktPath ...string) *Table__  
+**Func NewTable(flds FldMap, shared bool, bktPath ...string) *Table**  
 	* returns pointer to a new Table object  
 	* bktPath is optional, but must be set before using Load, Save, GetNextKey methods  
 	* constants bools Shared, NotShared should be used for shared value  
@@ -232,7 +242,7 @@ __Func NewTable(flds FldMap, shared bool, bktPath ...string) *Table__
 * GetDateTime uses value of global var DateTimeFormat to convert string to time.Time value.  
 * GetBytes is for complex values and is discussed below.  
 
-__Set Methods__ work pretty much like Get methods. There is a corresponding Set for every Get.
+**Set Methods** work pretty much like Get methods. There is a corresponding Set for every Get.
 
 * func signature: Set???(fld string, val type)
 * val's type matches the method name
@@ -346,7 +356,7 @@ Following methods call Table StartWrite / EndWrite methods. These methods cannot
 * All Load methods
 * Save  
   
-Following methods do not call Table StartRead/Write & EndRead/Write. __The app is responsible for calling locking methods before and after using them.__  
+Following methods do not call Table StartRead/Write & EndRead/Write. **The app is responsible for calling locking methods before and after using them.**  
 
 * Loop
 * AddRec
@@ -387,6 +397,7 @@ Go Locking:
 	* if there is no entry for a requested field, a default is returned (can specify default)
 	* the default value is of the requested type, so no conversion is required
 	* for example, number fields that default to 0 (zero)
+* Using maps for records is definitely less efficient than structs
 
 
 ##Errors
