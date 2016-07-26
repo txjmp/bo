@@ -88,18 +88,18 @@ func TestRecGet1(t *testing.T) {
 	tblRects.Loop(showRectVals)
 
 	fmt.Println("---- key order ------------------")
-	tblRects.Loop(showRectVals, tblRects.OrderBy["key"])
+	tblRects.Loop(showRectVals, "byKey")
 
 	fmt.Println("---- color order ------------------")
-	tblRects.CreateOrderBy("color", "color")
-	tblRects.Loop(showRectVals, tblRects.OrderBy["color"])
+	tblRects.CreateOrderBy("byColor", "color")
+	tblRects.Loop(showRectVals, "byColor")
 
 	fmt.Println("--- color-width -------------------")
-	tblRects.CreateOrderBy("color-width", "color", "w")
-	tblRects.Loop(showRectVals, tblRects.OrderBy["color-width"])
+	tblRects.CreateOrderBy("byColorWidth", "color", "w")
+	tblRects.Loop(showRectVals, "byColorWidth")
 
 	fmt.Println("--- by color, width, height(descending) -------------------")
-	tblRects.CreateOrderBy("color-w-h", "color", "w", "h:d")
+	tblRects.CreateOrderBy("byColorWidthHeight", "color", "w", "h:d")
 	i := 0
 	tblRects.Loop(func(key string, rec *Rec) {
 		color := rec.Get("color")
@@ -116,7 +116,7 @@ func TestRecGet1(t *testing.T) {
 		}
 		i++
 		fmt.Println(key, color, w, h)
-	}, tblRects.OrderBy["color-w-h"])
+	}, "byColorWidthHeight")
 }
 
 func TestRecUpdt1(t *testing.T) {
@@ -145,7 +145,7 @@ func TestRecUpdt1(t *testing.T) {
 	ShowTable(tblRects, "table contents after save")
 
 	tblRects.Load()
-	tblRects.Loop(showRectVals, tblRects.OrderBy["key"])
+	tblRects.Loop(showRectVals, "byKey")
 }
 
 func showRectVals(key string, rec *Rec) {

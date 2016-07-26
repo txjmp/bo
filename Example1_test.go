@@ -2,6 +2,12 @@
 /*
 Example1 stores and retrieves weather & accident data by location.
 Details:
+	db buckets:
+		locations
+		weather / loc_00000001
+		weather / loc_00000002
+		accidents / loc_00000001
+		accidents / loc_00000002
 	creates root level database buckets: locations, weather, accidents
 	locations bkt contains 1 record for each location, key is a sequential #
 	weather bkt contains 1 bucket for each location
@@ -64,27 +70,27 @@ func Example1() {
 	locationTbl = NewTable(locationFlds, NotShared, "locations")
 	locationTbl.Load()
 
+	loadLocNameIndex() // load secondary index for locations, so name can be used to get the primary key
+
 	// add some weather, accident data to the database
 	createWeatherData()
 	createAccidentData()
 
-	loadLocNameIndex() // load secondary index for locations, so name can be used to get the primary key
-
-	fmt.Println("\n------- weather data for Dallas, sorted by precip -------")
+	//fmt.Println("\n------- weather data for Dallas, sorted by precip -------")
 	locKey := locNameIndex["dallas"]
 	weatherTbl := NewTable(weatherFlds, NotShared, "weather", "loc_"+locKey)
 	weatherTbl.Load()
-	weatherTbl.CreateOrderBy("precip", "precip")
-	//weatherTbl.Loop(showWeatherData, weatherTbl.OrderBy["precip"])
+	weatherTbl.CreateOrderBy("byPrecip", "precip")
+	//weatherTbl.Loop(showWeatherData, "byPrecip")
 
-	fmt.Println("\n\n---- accident data for Waco in 2015, sorted by primaryRoadway & severity (descending) ----")
+	//fmt.Println("\n\n---- accident data for Waco in 2015, sorted by primaryRoadway & severity (descending) ----")
 	locKey = locNameIndex["waco"]
 	accidentsTbl := NewTable(accidentFlds, NotShared, "accidents", "loc_"+locKey)
 	accidentsTbl.LoadPrefix("2015")
-	accidentsTbl.CreateOrderBy("road_severity", "primaryRoadway", "severity:d")
-	//accidentsTbl.Loop(showAccidentData, accidentsTbl.OrderBy["road_severity"])
+	accidentsTbl.CreateOrderBy("byRoadSeverity", "primaryRoadway", "severity:d")
+	//accidentsTbl.Loop(showAccidentData, "byRoadSeverity"])
 
-	fmt.Println("\n\n---- compare highTemp for Waco & Dallas between 2015-01-01:2015-06-30 sorted by date ----")
+	//fmt.Println("\n\n---- compare highTemp for Waco & Dallas between 2015-01-01:2015-06-30 sorted by date ----")
 	locKey = locNameIndex["dallas"]
 	weather1Tbl := NewTable(weatherFlds, NotShared, "weather", "loc_"+locKey)
 	weather1Tbl.LoadRange("2015-01-01", "2015-06-30")
@@ -92,38 +98,38 @@ func Example1() {
 	weather2Tbl := NewTable(weatherFlds, NotShared, "weather", "loc_"+locKey)
 	weather2Tbl.LoadRange("2015-01-01", "2015-06-30")
 	// the key for weather recs is date
-	//weather1Tbl.Loop(func(key string, rec *Rec) {
-	//	highTemp1 := rec.GetFloat("highTemp")
-	//	rec2 := weather2Tbl.GetRec(key)
-	//	highTemp2 := rec2.GetFloat("highTemp")
-	//	fmt.Printf("High Temps on: %s Dallas: %.1f  Waco: %.1f \n", key, highTemp1, highTemp2)
-	//}, weather1Tbl.OrderBy["key"])
-
-	fmt.Println("\n\n----- weather data for all locations sorted by highTemp -----")
+	/* uncomment to see output
+	weather1Tbl.Loop(func(date string, rec *Rec) {
+		highTemp1 := rec.GetFloat("highTemp")
+		rec2 := weather2Tbl.GetRec(date) // get weather rec for same date for 2nd location
+		highTemp2 := rec2.GetFloat("highTemp")
+		fmt.Printf("High Temps on: %s Dallas: %.1f  Waco: %.1f \n", date, highTemp1, highTemp2)
+	}, "byKey"])
+	*/
+	fmt.Println("----- weather data for all locations sorted by highTemp -----")
 	weatherTbl = mergeWeather() // create table with weather data for all locations
-	weatherTbl.CreateOrderBy("highTemp", "highTemp:d")
-	weatherTbl.Loop(showWeatherData, weatherTbl.OrderBy["highTemp"])
+	weatherTbl.CreateOrderBy("byHighTemp", "highTemp:d", "locId")
+	weatherTbl.Loop(showWeatherData, "byHighTemp")
 
 	// Output:
-	// ....... xExample1 ..........
+	// ....... Example1 ..........
 	// ----- weather data for all locations sorted by highTemp -----
-
-	// 2016-06-24     Waco, highTemp:110.0, lowTemp:80.0, precip:0.15
+	//
 	// 2016-06-24   Dallas, highTemp:110.0, lowTemp:80.0, precip:0.15
-	// 2016-03-26     Waco, highTemp:100.0, lowTemp:70.0, precip:0.00
+	// 2016-06-24     Waco, highTemp:110.0, lowTemp:80.0, precip:0.15
 	// 2016-03-26   Dallas, highTemp:100.0, lowTemp:70.0, precip:0.00
-	// 2015-12-27     Waco, highTemp:90.0, lowTemp:60.0, precip:0.70
+	// 2016-03-26     Waco, highTemp:100.0, lowTemp:70.0, precip:0.00
 	// 2015-12-27   Dallas, highTemp:90.0, lowTemp:60.0, precip:0.70
-	// 2015-09-28     Waco, highTemp:80.0, lowTemp:50.0, precip:0.30
+	// 2015-12-27     Waco, highTemp:90.0, lowTemp:60.0, precip:0.70
 	// 2015-09-28   Dallas, highTemp:80.0, lowTemp:50.0, precip:0.30
+	// 2015-09-28     Waco, highTemp:80.0, lowTemp:50.0, precip:0.30
 	// 2015-06-30   Dallas, highTemp:70.0, lowTemp:40.0, precip:0.20
 	// 2015-06-30     Waco, highTemp:70.0, lowTemp:40.0, precip:0.20
 	// 2015-04-01   Dallas, highTemp:60.0, lowTemp:30.0, precip:1.10
 	// 2015-04-01     Waco, highTemp:60.0, lowTemp:30.0, precip:1.10
 	// 2015-01-01   Dallas, highTemp:50.0, lowTemp:20.0, precip:0.00
-	// 2015-01-01     Waco, highTemp:50.0, lowTemp:20.0, precip:0.00}
+	// 2015-01-01     Waco, highTemp:50.0, lowTemp:20.0, precip:0.00
 }
-
 func showWeatherData(key string, rec *Rec) {
 	date := rec.Get("date") // display string val of date
 	locId := rec.Get("locId")
@@ -168,13 +174,16 @@ func createLocations() {
 	tblLoc.Save(tx)
 	CommitDBWrite(tx)
 
-	tblLoc.Load()
-	var reporters []string
-	tblLoc.Loop(func(key string, rec *Rec) {
-		reporterBytes := rec.GetBytes("reporters")
-		json.Unmarshal(reporterBytes, &reporters)
-		fmt.Println(key, rec.Get("name"), rec.Get("region"), reporters)
-	})
+	// verify location data stored in db looks good
+	/*
+		tblLoc.Load()
+		var reporters []string
+		tblLoc.Loop(func(key string, rec *Rec) {
+			reporterBytes := rec.GetBytes("reporters")
+			json.Unmarshal(reporterBytes, &reporters)
+			fmt.Println(key, rec.Get("name"), rec.Get("region"), reporters)
+		})
+	*/
 
 	// create weather & accident / location sub buckets
 	tblLoc.Loop(func(key string, rec *Rec) {
@@ -183,6 +192,8 @@ func createLocations() {
 	})
 }
 
+// load weather data for each location
+// data goes in "weather" / "loc_xxxxx" bkt, where xxxxx = location id
 func createWeatherData() {
 	highTemps := []float64{50, 60, 70, 80, 90, 100, 110}
 	lowTemps := []float64{20, 30, 40, 50, 60, 70, 80}
@@ -202,7 +213,7 @@ func createWeatherData() {
 				"lowTemp":  FloatToStr(lowTemps[i]),
 				"precip":   FloatToStr(precips[i]),
 			})
-			date = date.AddDate(0, 0, 90)
+			date = date.AddDate(0, 0, 90) // next date is 90 days later
 		}
 		tx := StartDBWrite()
 		tblWeather.Save(tx)
@@ -213,6 +224,8 @@ func createWeatherData() {
 	}
 }
 
+// load accident data for each location
+// data goes in "accidents" / "loc_xxxxx" bkt, where xxxxx = location id
 func createAccidentData() {
 	roadways := []string{"hwy 77", "reddy way", "bobcat trail", "lincoln Dr", "hwy 77", "roger Rd"}
 	severityCodes := []int64{1, 2, 3, 2, 3, 1}
@@ -244,12 +257,15 @@ func createAccidentData() {
 // creates a secondary index enabling use of loc name to retrieve rec's primary key
 func loadLocNameIndex() {
 	locNameIndex = make(map[string]string)
-	for k, v := range locationTbl.RecMap {
-		locName := strings.ToLower(v.Get("name"))
-		locNameIndex[locName] = k
+	for key, rec := range locationTbl.RecMap {
+		locName := strings.ToLower(rec.Get("name"))
+		locNameIndex[locName] = key
 	}
 }
 
+// merge weather data from all weather bkts into a single table
+// note - allWeather Table's RecMap values point to recs in individual locationTbls
+// to create separate recs in allWeather, AddRec() with constructed ValMap should be used
 func mergeWeather() *Table {
 	allWeather := NewTable(weatherFlds, NotShared)
 	allWeather.CreateRecMap()
@@ -258,10 +274,11 @@ func mergeWeather() *Table {
 		locWeather.SetBktPath("weather", "loc_"+locKey)
 		locWeather.Load()
 		for weatherKey, weatherRec := range locWeather.RecMap {
-			mergedKey := locKey + "_" + weatherKey // makes all keys in merged table unique
-			allWeather.RecMap[mergedKey] = weatherRec
+			mergedKey := locKey + "_" + weatherKey    // makes all keys in merged table unique
+			allWeather.RecMap[mergedKey] = weatherRec // weatherRec is pointer to rec in other RecMap
 		}
 	})
 	return allWeather
+
 	//ShowTable(allWeather, "merged weather")
 }

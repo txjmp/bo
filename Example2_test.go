@@ -61,8 +61,8 @@ func Example2() {
 	})
 	sales := NewTable(salesFlds, NotShared, "sales")
 	sales.LoadSome(salesIds)
-	sales.CreateOrderBy("amt", "amt:d") // sort by amt descending
-	sales.Loop(showSale, sales.OrderBy["amt"])
+	sales.CreateOrderBy("byAmt", "amt:d") // sort by amt descending
+	sales.Loop(showSale, "byAmt")
 
 	// Output:
 	// ....... Example2 ..........

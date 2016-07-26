@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/boltdb/bolt"
+	"log"
 	"sort"
 	"strings"
 	"sync"
@@ -162,7 +163,7 @@ func (this *Table) Load() int {
 			this.RecMap[key] = &Rec{Tbl: this, Vals: valMap}
 			keys = append(keys, key) // Bolt returns keys in sorted order
 		}
-		this.OrderBy["key"] = keys
+		this.OrderBy["byKey"] = keys
 		return nil
 	})
 	this.EndWrite()
@@ -227,7 +228,7 @@ func (this *Table) LoadRange(start, end string) int {
 			this.RecMap[key] = &Rec{Tbl: this, Vals: valMap}
 			keys = append(keys, key)
 		}
-		this.OrderBy["key"] = keys
+		this.OrderBy["byKey"] = keys
 		return nil
 	})
 	this.EndWrite()
@@ -251,7 +252,7 @@ func (this *Table) LoadPrefix(prefix string) int {
 			this.RecMap[key] = &Rec{Tbl: this, Vals: valMap}
 			keys = append(keys, key)
 		}
-		this.OrderBy["key"] = keys
+		this.OrderBy["byKey"] = keys
 		return nil
 	})
 	this.EndWrite()
@@ -259,10 +260,14 @@ func (this *Table) LoadPrefix(prefix string) int {
 }
 
 // Loop reads thru RecMap calling fn for each record.
-// Optional orderBy can be used to control order records are accessed.
-func (this *Table) Loop(fn func(key string, rec *Rec), orderBy ...[]string) {
+// Optional orderBy is key in OrderBy map.
+func (this *Table) Loop(fn func(key string, rec *Rec), orderBy ...string) {
 	if len(orderBy) > 0 {
-		for _, key := range orderBy[0] {
+		sortOrder := orderBy[0]
+		if _, found := this.OrderBy[sortOrder]; !found {
+			log.Fatal("Table.Loop orderBy Not Found: ", sortOrder)
+		}
+		for _, key := range this.OrderBy[sortOrder] {
 			if this.RecMap[key].Vals["delete"] == "1" {
 				continue
 			}

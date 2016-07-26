@@ -39,6 +39,7 @@ func validFld(flds FldMap, fld string) bool {
 	return false
 }
 
+// Get returns string value for fld.
 func (rec Rec) Get(fld string, defaultVal ...string) string {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
 		log.Fatal("invalid fld:", fld)
@@ -52,6 +53,7 @@ func (rec Rec) Get(fld string, defaultVal ...string) string {
 	return val
 }
 
+// GetBytes []byte value for fld.
 func (rec Rec) GetBytes(fld string, defaultVal ...[]byte) []byte {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
 		log.Fatal("invalid fld: ", fld)
