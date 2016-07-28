@@ -17,12 +17,12 @@ const custKeySize = 4
 const salesKeySize = 7
 
 var customerFlds = FldMap{
-	"id":   "string",
-	"name": "string",
+	"id":   "str",
+	"name": "str",
 }
 var salesFlds = FldMap{
-	"id":     "string",
-	"custId": "string",
+	"id":     "str",
+	"custId": "str",
 	"date":   "date",
 	"amt":    "float",
 }

@@ -327,8 +327,16 @@ func (this *Table) SetKeySize(size int) {
 	this.KeySize = fmt.Sprintf("%s%dd", "%0", size) // size = 5, returns "%05d"
 }
 
+var validTypes = "strintfloatbytesdatedateTimebool"
+
 // NewTable creates and inits a new Table. Returns pointer to it.
 func NewTable(flds FldMap, shared bool, bktPath ...string) *Table {
+	for fld, valType := range flds {
+		x := strings.Index(validTypes, valType)
+		if x == -1 {
+			log.Panic("invalid type for fld ", fld, valType)
+		}
+	}
 	t := &Table{
 		Shared:  shared,
 		KeySize: DefaultKeySize,

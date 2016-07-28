@@ -33,22 +33,22 @@ import "time"
 import "strings"
 
 var locationFlds = FldMap{
-	"id":        "string",
-	"name":      "string",
-	"region":    "string",
+	"id":        "str",
+	"name":      "str",
+	"region":    "str",
 	"reporters": "bytes", // marshaled from []string
 }
 var weatherFlds = FldMap{
-	"locId":    "string",
+	"locId":    "str",
 	"date":     "date",
 	"highTemp": "float",
 	"lowTemp":  "float",
 	"precip":   "float",
 }
 var accidentFlds = FldMap{
-	"locId":          "string",
+	"locId":          "str",
 	"dateTime":       "dateTime",
-	"primaryRoadway": "string",
+	"primaryRoadway": "str",
 	"severity":       "int",
 }
 
