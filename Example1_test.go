@@ -264,21 +264,17 @@ func loadLocNameIndex() {
 }
 
 // merge weather data from all weather bkts into a single table
-// note - allWeather Table's RecMap values point to recs in individual locationTbls
-// to create separate recs in allWeather, AddRec() with constructed ValMap should be used
 func mergeWeather() *Table {
 	allWeather := NewTable(weatherFlds, NotShared)
 	allWeather.CreateRecMap()
 	locWeather := NewTable(weatherFlds, NotShared)
-	locationTbl.Loop(func(locKey string, locRec *Rec) {
+	locationTbl.Loop(func(locKey string, locRec *Rec) { // get weather data for each location
 		locWeather.SetBktPath("weather", "loc_"+locKey)
 		locWeather.Load()
-		for weatherKey, weatherRec := range locWeather.RecMap {
-			mergedKey := locKey + "_" + weatherKey    // makes all keys in merged table unique
-			allWeather.RecMap[mergedKey] = weatherRec // weatherRec is pointer to rec in other RecMap
-		}
+		locWeather.Loop(func(date string, weatherRec *Rec) { // key in weather rec is date
+			mergedKey := locKey + "_" + date // makes all keys in merged table unique
+			allWeather.AddRec(mergedKey, weatherRec.Vals)
+		})
 	})
 	return allWeather
-
-	//ShowTable(allWeather, "merged weather")
 }
