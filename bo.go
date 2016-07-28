@@ -25,7 +25,7 @@ func Setdb(database *bolt.DB) {
 func StartDBWrite() *bolt.Tx {
 	tx, err := db.Begin(true)
 	if err != nil {
-		log.Fatal("StartDBWrite Failed", err)
+		log.Panic("StartDBWrite Failed", err)
 	}
 	return tx
 }
@@ -34,7 +34,7 @@ func CommitDBWrite(tx *bolt.Tx) {
 	err := tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		log.Fatal("CommitDBWrite Failed", err)
+		log.Panic("CommitDBWrite Failed", err)
 	}
 }
 
@@ -111,11 +111,11 @@ func (this sortRecs) Less(a, b int) bool {
 func OpenBucket(tx *bolt.Tx, bktPath []string) *bolt.Bucket {
 	bkt := tx.Bucket(bs(bktPath[0]))
 	if bkt == nil {
-		log.Fatal("OpenBucket failed", bktPath)
+		log.Panic("OpenBucket failed", bktPath)
 	}
 	for i := 1; i < len(bktPath); i++ {
 		if bkt = bkt.Bucket(bs(bktPath[i])); bkt == nil {
-			log.Fatal("OpenBucket failed", bktPath)
+			log.Panic("OpenBucket failed", bktPath)
 		}
 	}
 	return bkt
@@ -154,12 +154,12 @@ func CreateBucket(bktPath ...string) *bolt.Bucket {
 			}
 			bktPointer, err = parentBkt.CreateBucket(bs(bktName))
 			if err != nil {
-				log.Fatal("CreateBucket failed", err, bktPath)
+				log.Panic("CreateBucket failed", err, bktPath)
 			}
 		} else {
 			bktPointer, err = tx.CreateBucket(bs(bktName))
 			if err != nil {
-				log.Fatal("CreateBucket failed", err, bktPath)
+				log.Panic("CreateBucket failed", err, bktPath)
 			}
 		}
 		return nil
@@ -184,28 +184,28 @@ func FloatToStr(x float64) string {
 func StrToInt(xStr string) int64 {
 	x, err := strconv.ParseInt(xStr, 10, 64)
 	if err != nil {
-		log.Fatal("cannot convert str to int, ", xStr)
+		log.Panic("cannot convert str to int, ", xStr)
 	}
 	return x
 }
 func StrToFloat(xStr string) float64 {
 	x, err := strconv.ParseFloat(xStr, 64)
 	if err != nil {
-		log.Fatal("cannot convert str to float, ", xStr)
+		log.Panic("cannot convert str to float, ", xStr)
 	}
 	return x
 }
 func StrToDate(strDate string) time.Time {
 	date, err := time.Parse(DateFormat, strDate)
 	if err != nil {
-		log.Fatal("cannot convert string to date", strDate)
+		log.Panic("cannot convert string to date", strDate)
 	}
 	return date
 }
 func StrToDateTime(strDate string) time.Time {
 	date, err := time.Parse(DateTimeFormat, strDate)
 	if err != nil {
-		log.Fatal("cannot convert string to dateTime", strDate)
+		log.Panic("cannot convert string to dateTime", strDate)
 	}
 	return date
 }
@@ -221,7 +221,7 @@ func BytesToStr(val []byte) string {
 func StrToBytes(val string) []byte {
 	valBytes, err := base64.StdEncoding.DecodeString(val)
 	if err != nil {
-		log.Fatal("StrToBytes cannot base64 decode string val: ", val)
+		log.Panic("StrToBytes cannot base64 decode string val: ", val)
 	}
 	return valBytes
 }

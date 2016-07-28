@@ -1,24 +1,23 @@
 #Bo - A Frontend For BoltDB
 
-[BoltDB](https://github.com/boltdb/bolt) is a simple, fast, reliable key:value database. One thing is for sure, its not overburdened with features. If you feel Bolt is a little too bare bones, but don't need all the features or want the complexity of other databases, then you might like Bo. Its primarily a tool for speeding up the development process. The goal of writing Bo was to provide mind **bo**gglingly easy data management. I can't say that goal was reached, but IMHO it was at least partially achieved.  
+[BoltDB](https://github.com/boltdb/bolt) is a simple, fast, reliable key:value database. It is incredibly easy to get up and running, but using it can be a tad tedious. With Bo you can get a lot done with very little code. Its focus is on speed of development. The goal is to reduce stress on the man(or woman) while maybe adding a little more work for the machine. If your creating an app for the world, no Bo. If your creating an app for the neighborhood, Go Bo. 
   
 **Snippet**
 
 	members := NewTable(memberFlds, NotShared, "members")
 	members.Load()
 
-These 2 lines load all the records in the members bucket into a Table object.  Other methods load a selection of records. Once in a Table, it is very easy to sort, iterate through, add, change, and delete records. The Save method saves all changes to the database. Related data in other Tables is also easily accessed.
+These 2 lines load all the records in the members bucket into a Table object.  Other methods load a selection of records. Once in a Table, it is very easy to sort, iterate through, add, change, and delete records. The Save method writes changes to the database (unchanged recs are ignored). Related data in other Tables are also easily accessed.
+  
+
+##Overview
+
+Bo stores data from BoltDB buckets in objects called Tables. Tables contain a RecMap, map[string]*Rec (map key is db rec key), plus assorted attributes and methods. All data is stored as Recs which are maps with string keys and string values,  map[string]string (map key is field name, map val is string value of field). Rec objects have methods to retrieve/save values in the desired type (converting from/to string if needed).Tables have methods to load and save records from/to a database bucket. Tools are provided to access a table's recs in sorted order which can be based on mutiple fields and include ascending and descending order.
   
 ##Short Example
 
 	database, _ := bolt.Open("test.db", 0600, nil)
 	bo.Setdb(database)
-
-	// NOTE to prevent early preconceptions about how Bo works.
-	// Records are loaded into Table objects as map[string]string.
-	// Key being the field name, Value being the field's value stored as a string.
-	// The FldMap attribute of a Table is used to validate field names and sorting.
-	// It does not specify a struct type definition of a record.
 
 	var circleFlds = bo.FldMap{
 		"color":   "str",
@@ -39,8 +38,8 @@ These 2 lines load all the records in the members bucket into a Table object.  O
 	bo.CommitDBWrite(tx)
 
 	// show values in order by color, radius (larger values 1st)
-	tblCircles.CreateOrderBy("color_radius", "color", "radius:d")
-	tblCircles.Loop(showCircleVals, tblCircles.OrderBy["color_radius"])
+	tblCircles.CreateOrderBy("byColorRadius", "color", "radius:d")
+	tblCircles.Loop(showCircleVals, "byColorRadius")
 	...	
 	func showCircleVals(key string, rec *bo.Rec) {
 		color := rec.Get("color")
@@ -144,7 +143,7 @@ To understand Bo, you only have to learn 2 elements.
 	* Table's RecMap and Orderby are recreated; any previous values are lost
 	* returns count of recs loaded
 	* automatically locks & unlocks table if shared
-	* creates tbl.OrderBy["key"] for reading RecMap in key order
+	* creates tbl.OrderBy["byKey"] for reading RecMap in key order
 * LoadPrefix(prefix string) int
 	* same as Load, except only loads recs where beginning of key matches prefix  
 * LoadRange(start, end string) int
@@ -164,10 +163,10 @@ To understand Bo, you only have to learn 2 elements.
 	* automatically locks/unlocks table if shared  
 	* deleted records are removed from table
 	* changed records are no longer marked as changed
-* Loop(func(key string, rec *Rec), orderBy ...[]string)  
+* Loop(func(key string, rec *Rec), orderBy string)  
 	* reads every record in Table.RecMap, calling func for each one  
 	* recs marked as deleted are skipped  
-	* optional orderBy specifies rec keys in order to be read  
+	* optional orderBy specifies key in OrderBy map containing keys in order to be read  
 * CreateOrderBy(orderByName string, sortBy ...string)  
 	* creates slice of rec keys in order based on sortBy   
 	* orderByName is used as OrderBy map key to identify the sort order  
@@ -227,7 +226,8 @@ To understand Bo, you only have to learn 2 elements.
 
 ###Rec Methods
 
-* Get Methods: Get, GetInt, GetFloat, GetDate, GetDateTime, GetBool, GetBytes
+**Get Methods**: Get, GetInt, GetFloat, GetDate, GetDateTime, GetBool, GetBytes
+
 * func signature: func Get???(fld string, defaultVal ...type) type
 * fld is the field name of value to be returned
 	* fld must be in Tbl.Flds
@@ -246,7 +246,7 @@ To understand Bo, you only have to learn 2 elements.
 
 * func signature: Set???(fld string, val type)
 * val's type matches the method name
-	* SetDate, val is time.Time
+	* SetDate, SetDateTime val is time.Time
 	* SetInt, val is int64; SetFloat, val is float64
 * all convert val to a string.  
 * The existing rec value for fld is replaced with the new string value.  
@@ -261,13 +261,13 @@ For example, if GetInt cannot convert the stored string value to an int64, the p
 
 Table's CreateOrderBy method provides a means to access records in sorted order. It creates a slice containing the keys of the records in RecMap in order based on the values of particular fields in the records. A variable number of sortBy fields can be specified. By default, values are sorted in ascending order. To sort a specific field in descending order append ":d" to the field name.  
 
-	Example: CreateOrderBy("severity_date", "severity", "date:d")
+	Example: CreateOrderBy("bySeverityDate", "severity", "date:d")
 
-Creates Table.OrderBy["severity_date"] containing keys sorted by flds severity and date. Records with the same severity are shown with most recent dates first.
+Creates Table.OrderBy["bySeverityDate"] containing keys sorted by flds severity and date. Records with the same severity are shown with most recent dates first.
 
 ##NOTE
 
-When a table is loaded, the key orderBy is automatically created. To access records in key order use Table.OrderBy["key"].
+When a table is loaded, the "byKey" orderBy is automatically created. To access records in key order use Table.OrderBy["byKey"].
 
 ##Table's Loop Method
 
@@ -283,7 +283,7 @@ Using the Loop method:
 
     tbl.Loop(func(key string, rec *Rec) {
         fmt.Println(key, rec.Get("name"), rec.GetBool("member"))
-    }, tbl.OrderBy["key"])
+    }, "byKey")
 This example reads records in key order.   
 func is called once for every record, it can be inline (like example) or a separate function.  
 If orderBy is omitted, order is random.
@@ -384,30 +384,33 @@ Go Locking:
 	* Call StartDBWrite which returns a *bolt.Tx (Bolt write transaction).
 	* Call CommitDBWrite(tx) after all saves in transaction.
 * Table GetNextKey creates its own write transaction (bucket sequence number is updated)
+* CreateBucket func creates is own write transaction
   
 ##Performance
 
-* When reading/writing to db, all data is converted between map[string]string and []bytes (json marshal/unmarshal)
-* Custom marshal, unmarshal methods are used which are fast
-* Rec Get, GetInt, GetDate, ... methods are used to retrieve a field's value
+* When reading/writing to db, all data is converted between map[string]string and []bytes (json marshal/unmarshal).
+* Custom marshal, unmarshal methods are used which are fast.
+* Rec Get, GetInt, GetDate, ... methods are used to retrieve a field's value.
 	* string values are returned as stored
 	* the string value of any type can also be returned as stored
 	* returning number and date types requires a conversion step (from string to type)
-* Values do not have to be loaded for every field
+* Values do not have to be loaded for every field.
 	* if there is no entry for a requested field, a default is returned (can specify default)
 	* the default value is of the requested type, so no conversion is required
 	* for example, number fields that default to 0 (zero)
-* Using maps for records is definitely less efficient than structs
+* Using maps for records provides simplicity and flexibility, but is definitely less efficient than structs.
 
 
 ##Errors
 
-One point of contention that may make Bo a non-starter for some. Bo does not generally include an error in the set of return values. If a problem is detected and a single return value cannot reasonably communicate the error, then Bo calls log.Fatal, displaying a message reflecting the reason for abort. This approach obviously has pitfalls, but the point of error is clear and removes the possibility of a program continuing to run until a less understandable crash occurs because an error return value was not checked. Methods like Table.GetRec(key) will not abort if the record key is not found, but return a nil pointer value. Methods like Rec.GetInt(fld) will abort if the stored database value cannot be converted to an integer. Log.Fatal is used rather than Panic because middleware like http/net will recover on panic and the app will keep running.
+Bo funcs and methods do not generally return error values.  If a problem is detected and a single return value cannot reasonably communicate the error, then Bo calls log.Panic, displaying a message reflecting the reason for abort. With this approach the point of error is clear and removes the possibility of a program continuing to run until a less understandable crash occurs because an error return value was not checked. Methods like Table.GetRec(key) will not abort if the record key is not found, but return a nil pointer value. Methods like Rec.GetInt(fld) will abort if the stored database value cannot be converted to an integer. Beware that some middleware like http/net will recover on panic and the app will keep running. From the Go documentation:  
+  
+> Panic is a built-in function that stops the ordinary flow of control and begins panicking.  
+> When the function F calls panic, execution of F stops, any deferred functions in F are executed normally, and then F returns to its caller.  
+> To the caller, F then behaves like a call to panic.  
+> The process continues up the stack until all functions in the current goroutine have returned, at which point the program crashes.  
 
-##Summary
-
-Bo stores data from BoltDB buckets in objects called Tables. Tables contain a RecMap, map[string]*Rec (map key is db rec key), plus assorted attributes and methods. All data is stored as Recs which are maps with string keys and string values, map[string]string. Rec objects have methods to retrieve/save values in the desired type (converting from/to string if needed).Tables have methods to load and save records from/to a database bucket. Tools are provided to access a table's recs in sorted order which can be based on mutiple fields and include ascending and descending order.
-
+  
 ##Database Design Strategies
 
 Generally speaking, don't create lots of buckets with a few records in each. For exampe a separate bucket for every order. Keys can be composed of multiple parts which makes it easy to get a set of records with the same key prefix. Example:

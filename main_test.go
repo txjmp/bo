@@ -16,5 +16,6 @@ func TestMain(m *testing.M) {
 	defer database.Close()
 	Setdb(database)
 	CreateBucket("perf") // can't run inside benchmark func (called more than once)
+	CreateBucket("speed1")
 	os.Exit(m.Run())
 }

@@ -206,28 +206,21 @@ func TestDates(t *testing.T) {
 }
 
 func Benchmark_Marshal(b *testing.B) {
-	tblPerf = NewTable(perfFlds, NotShared, "perf")
-	tblPerf.CreateRecMap()
-	keys := tblPerf.GetNextKeys(1000)
-	for i := 0; i < len(keys); i++ {
-		valMap := ValMap{
-			"id": keys[i],
-			"f1": "field number 1",
-			"f2": "field number 2",
-			"f3": "field number 3",
-			"f4": "field number 4",
-			"f5": "field number 5",
-		}
-		tblPerf.AddRec(keys[i], valMap)
+	tbl := NewTable(perfFlds, NotShared, "perf")
+	tbl.CreateRecMap()
+	key := "001"
+	valMap := ValMap{
+		"id": key,
+		"f1": "field number 1",
+		"f2": "field number 2",
+		"f3": "field number 3",
+		"f4": "field number 4",
+		"f5": "field number 5",
 	}
-	tx := StartDBWrite()
-	tblPerf.Save(tx)
-	CommitDBWrite(tx)
-
+	tbl.AddRec(key, valMap)
+	rec := tbl.GetRec(key)
 	for n := 0; n < b.N; n++ {
-		for _, rec := range tblPerf.RecMap {
-			rec.Vals.toJson()
-		}
+		rec.Vals.toJson()
 	}
 }
 
@@ -246,4 +239,51 @@ func Benchmark_Unmarshal(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		rec2.Vals.fromJson(jsonBytes)
 	}
+}
+
+func Benchmark_Speed1(b *testing.B) {
+	// CreateBucket("speed1")  moved to main_test
+	for n := 0; n < b.N; n++ {
+		Speed1()
+	}
+}
+func Speed1() {
+	var flds = FldMap{
+		"id":    "str",
+		"date":  "date",
+		"amt":   "float",
+		"count": "int",
+	}
+	tbl := NewTable(flds, NotShared, "speed1")
+	tbl.CreateRecMap()
+	type input struct {
+		id    string
+		date  time.Time
+		amt   float64
+		count int64
+	}
+	data := input{
+		id:    tbl.GetNextKey(),
+		date:  time.Now(),
+		amt:   765.43,
+		count: 123,
+	}
+	tbl.AddRec(data.id, ValMap{
+		"id":    data.id,
+		"date":  DateToStr(data.date),
+		"amt":   FloatToStr(data.amt),
+		"count": IntToStr(data.count),
+	})
+	tx := StartDBWrite()
+	tbl.Save(tx)
+	CommitDBWrite(tx)
+
+	tbl.Load()
+	tbl.Loop(func(key string, rec *Rec) {
+		id := rec.Get("id")
+		date := rec.GetDate("date")
+		amt := rec.GetFloat("amt")
+		count := rec.GetInt("count")
+		fmt.Sprintln(id, date, amt, count)
+	})
 }

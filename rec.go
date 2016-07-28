@@ -42,7 +42,7 @@ func validFld(flds FldMap, fld string) bool {
 // Get returns string value for fld.
 func (rec Rec) Get(fld string, defaultVal ...string) string {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
-		log.Fatal("invalid fld:", fld)
+		log.Panic("invalid fld:", fld)
 	}
 	val, found := rec.Vals[fld]
 	if !found {
@@ -56,7 +56,7 @@ func (rec Rec) Get(fld string, defaultVal ...string) string {
 // GetBytes []byte value for fld.
 func (rec Rec) GetBytes(fld string, defaultVal ...[]byte) []byte {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
-		log.Fatal("invalid fld: ", fld)
+		log.Panic("invalid fld: ", fld)
 	}
 	val, found := rec.Vals[fld]
 	if !found {
@@ -71,7 +71,7 @@ func (rec Rec) GetBytes(fld string, defaultVal ...[]byte) []byte {
 
 func (rec Rec) GetInt(fld string, defaultVal ...int64) int64 {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
-		log.Fatal("invalid fld: ", fld)
+		log.Panic("invalid fld: ", fld)
 	}
 	val, found := rec.Vals[fld]
 	if !found {
@@ -85,7 +85,7 @@ func (rec Rec) GetInt(fld string, defaultVal ...int64) int64 {
 
 func (rec Rec) GetFloat(fld string, defaultVal ...float64) float64 {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
-		log.Fatal("invalid fld: ", fld)
+		log.Panic("invalid fld: ", fld)
 	}
 	val, found := rec.Vals[fld]
 	if !found {
@@ -99,7 +99,7 @@ func (rec Rec) GetFloat(fld string, defaultVal ...float64) float64 {
 
 func (rec Rec) GetDate(fld string, defaultVal ...time.Time) time.Time {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
-		log.Fatal("invalid fld: ", fld)
+		log.Panic("invalid fld: ", fld)
 	}
 	val, found := rec.Vals[fld]
 	if !found {
@@ -113,7 +113,7 @@ func (rec Rec) GetDate(fld string, defaultVal ...time.Time) time.Time {
 
 func (rec Rec) GetDateTime(fld string, defaultVal ...time.Time) time.Time {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
-		log.Fatal("invalid fld: ", fld)
+		log.Panic("invalid fld: ", fld)
 	}
 	val, found := rec.Vals[fld]
 	if !found {
@@ -127,7 +127,7 @@ func (rec Rec) GetDateTime(fld string, defaultVal ...time.Time) time.Time {
 
 func (rec Rec) GetBool(fld string, defaultVal ...bool) bool {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
-		log.Fatal("invalid fld: ", fld)
+		log.Panic("invalid fld: ", fld)
 	}
 	val, found := rec.Vals[fld]
 	if !found {
@@ -141,14 +141,14 @@ func (rec Rec) GetBool(fld string, defaultVal ...bool) bool {
 	} else if val == "false" {
 		return false
 	}
-	log.Fatal("not a valid bool", val)
+	log.Panic("not a valid bool", val)
 	return false
 }
 
 // --- Rec set methods -----------------------------------------
 func (rec Rec) Set(fld, val string) {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
-		log.Fatal("invalid fld: ", fld)
+		log.Panic("invalid fld: ", fld)
 	}
 	rec.Vals[fld] = val
 	rec.Vals["#c"] = "1"
@@ -156,7 +156,7 @@ func (rec Rec) Set(fld, val string) {
 
 func (rec Rec) SetBytes(fld string, val []byte) {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
-		log.Fatal("invalid fld: ", fld)
+		log.Panic("invalid fld: ", fld)
 	}
 	rec.Vals[fld] = base64.StdEncoding.EncodeToString(val)
 	rec.Vals["#c"] = "1"
@@ -164,7 +164,7 @@ func (rec Rec) SetBytes(fld string, val []byte) {
 
 func (rec Rec) SetInt(fld string, val int64) {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
-		log.Fatal("invalid fld: ", fld)
+		log.Panic("invalid fld: ", fld)
 	}
 	rec.Vals[fld] = IntToStr(val)
 	rec.Vals["#c"] = "1"
@@ -172,7 +172,7 @@ func (rec Rec) SetInt(fld string, val int64) {
 
 func (rec Rec) SetFloat(fld string, val float64) {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
-		log.Fatal("invalid fld: ", fld)
+		log.Panic("invalid fld: ", fld)
 	}
 	rec.Vals[fld] = FloatToStr(val)
 	rec.Vals["#c"] = "1"
@@ -180,7 +180,7 @@ func (rec Rec) SetFloat(fld string, val float64) {
 
 func (rec Rec) SetDate(fld string, date time.Time) {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
-		log.Fatal("invalid fld: ", fld)
+		log.Panic("invalid fld: ", fld)
 	}
 	rec.Vals[fld] = date.Format(DateFormat)
 	rec.Vals["#c"] = "1"
@@ -188,7 +188,7 @@ func (rec Rec) SetDate(fld string, date time.Time) {
 
 func (rec Rec) SetDateTime(fld string, dateTime time.Time) {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
-		log.Fatal("invalid fld: ", fld)
+		log.Panic("invalid fld: ", fld)
 	}
 	rec.Vals[fld] = dateTime.Format(DateTimeFormat)
 	rec.Vals["#c"] = "1"
@@ -196,7 +196,7 @@ func (rec Rec) SetDateTime(fld string, dateTime time.Time) {
 
 func (rec Rec) SetBool(fld string, val bool) {
 	if ok := validFld(rec.Tbl.Flds, fld); !ok {
-		log.Fatal("invalid fld: ", fld)
+		log.Panic("invalid fld: ", fld)
 	}
 	if val {
 		rec.Vals[fld] = "true"
@@ -241,7 +241,7 @@ func (this ValMap) fromJson(jsonBytes []byte) {
 	var key, val string
 	for {
 		if offset > len(jsonBytes) {
-			log.Fatal("ValMap.fromJson, bad json\n", string(jsonBytes))
+			log.Panic("ValMap.fromJson, bad json\n", string(jsonBytes))
 		}
 		// --- get key ----------------------------------------
 		qx = bytes.IndexByte(jsonBytes[offset:], quote) // beg quote for key

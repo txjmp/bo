@@ -265,7 +265,7 @@ func (this *Table) Loop(fn func(key string, rec *Rec), orderBy ...string) {
 	if len(orderBy) > 0 {
 		sortOrder := orderBy[0]
 		if _, found := this.OrderBy[sortOrder]; !found {
-			log.Fatal("Table.Loop orderBy Not Found: ", sortOrder)
+			log.Panic("Table.Loop orderBy Not Found: ", sortOrder)
 		}
 		for _, key := range this.OrderBy[sortOrder] {
 			if this.RecMap[key].Vals["delete"] == "1" {
