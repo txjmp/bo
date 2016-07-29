@@ -7,7 +7,7 @@ Design looks solid. Hope others will give it a try and provide feedback. Testing
 This readme.md file was created with CuteMarkEd, a free Windows app. It sure made the editing process a lot easier.  
 
 **one more thing before getting started**  
-Bo normally Panics on error (a reason is displayed). Errors are not generally returned. This decision has good and bad points. Bo requires using lots of method calls. Checking for and handling an error on each one would add significant lines of code to your app. There is some comfort in knowing the program will abort rather than continuing with an unhandled error. Also single return values allow chaining and embedding. I know some apps cannot live with this approach.
+Bo normally Panics on error (a reason is displayed). Errors are not generally returned. This decision has good and bad points. Bo requires using lots of method calls. Checking for and handling an error on each one would add significant lines of code to your app. There is some comfort in knowing the program will abort rather than continuing with an unhandled error. Also, single return values allow chaining and embedding. I know some apps cannot live with this approach.
 
 [BoltDB](https://github.com/boltdb/bolt) is a simple, fast, reliable key:value database. It is incredibly easy to get up and running, but using it can be a tad tedious. With Bo you can get a lot done with very little code. Its focus is on speed of development. The goal is to reduce stress on the man(or woman) while maybe adding a little more work for the machine. If your creating an app for the world, no Bo. If your creating an app for the neighborhood, Go Bo. 
   

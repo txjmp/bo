@@ -289,11 +289,16 @@ func (this *Table) Loop(fn func(key string, rec *Rec), orderBy ...string) {
 func (this *Table) Save(tx *bolt.Tx) int {
 	this.StartWrite()
 	var count int
+	var err error
 	bkt := OpenBucket(tx, this.BktPath)
 	for key, rec := range this.RecMap {
 		deleteFlag, _ := rec.Vals["#delete"] // #delete is fldname for delete flag
 		if deleteFlag == "1" {
-			bkt.Delete(bs(key))
+			err = bkt.Delete(bs(key))
+			if err != nil { // if key does not exist, not error
+				tx.Rollback()
+				log.Panic("bolt bkt.Delete failed, ", err, ", key:", key, ", bkt:", this.BktPath)
+			}
 			delete(this.RecMap, key) // remove this record from table RecMap
 			count++
 			continue
@@ -302,7 +307,11 @@ func (this *Table) Save(tx *bolt.Tx) int {
 		if changed == "1" {
 			delete(rec.Vals, "#c") // remove change field
 			val := rec.Vals.toJson()
-			bkt.Put(bs(key), val)
+			err = bkt.Put(bs(key), val)
+			if err != nil {
+				tx.Rollback()
+				log.Panic("bolt bkt.Put failed, ", err, ", key:", key, ", bkt:", this.BktPath)
+			}
 			count++
 		}
 	}
