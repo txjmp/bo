@@ -1,5 +1,14 @@
 #Bo - A Frontend For BoltDB
 
+**status**  
+Design looks solid. Hope others will give it a try and provide feedback. Testing modules are a bit of a mess and will be cleaning those up.  
+  
+**shout out**  
+This readme.md file was created with CuteMarkEd, a free Windows app. It sure made the editing process a lot easier.  
+
+**one more thing before getting started**  
+Bo normally Panics on error (a reason is displayed). Errors are not generally returned. This decision has good and bad points. Bo requires using lots of method calls. Checking for and handling an error on each one would add significant lines of code to your app. There is some comfort in knowing the program will abort rather than continuing with an unhandled error. Also single return values allow chaining and embedding. I know some apps cannot live with this approach.
+
 [BoltDB](https://github.com/boltdb/bolt) is a simple, fast, reliable key:value database. It is incredibly easy to get up and running, but using it can be a tad tedious. With Bo you can get a lot done with very little code. Its focus is on speed of development. The goal is to reduce stress on the man(or woman) while maybe adding a little more work for the machine. If your creating an app for the world, no Bo. If your creating an app for the neighborhood, Go Bo. 
   
 **Snippet**
@@ -250,12 +259,6 @@ To understand Bo, you only have to learn 2 elements.
 	* SetInt, val is int64; SetFloat, val is float64
 * all convert val to a string.  
 * The existing rec value for fld is replaced with the new string value.  
-
-##Crash on Error  
-
-Unless specified, Bo's functions and methods do not return errors.
-If an error occurs, log.Fatal is called with an explanatory message.
-For example, if GetInt cannot convert the stored string value to an int64, the program aborts.
 
 ##More on Sorting
 

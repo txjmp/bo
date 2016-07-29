@@ -111,11 +111,11 @@ func (this sortRecs) Less(a, b int) bool {
 func OpenBucket(tx *bolt.Tx, bktPath []string) *bolt.Bucket {
 	bkt := tx.Bucket(bs(bktPath[0]))
 	if bkt == nil {
-		log.Panic("OpenBucket failed", bktPath)
+		log.Panic("OpenBucket failed, bktPath: ", bktPath)
 	}
 	for i := 1; i < len(bktPath); i++ {
 		if bkt = bkt.Bucket(bs(bktPath[i])); bkt == nil {
-			log.Panic("OpenBucket failed", bktPath)
+			log.Panic("OpenBucket failed, bktPath: ", bktPath)
 		}
 	}
 	return bkt
@@ -198,14 +198,14 @@ func StrToFloat(xStr string) float64 {
 func StrToDate(strDate string) time.Time {
 	date, err := time.Parse(DateFormat, strDate)
 	if err != nil {
-		log.Panic("cannot convert string to date", strDate)
+		log.Panic("cannot convert string to date, ", strDate)
 	}
 	return date
 }
 func StrToDateTime(strDate string) time.Time {
 	date, err := time.Parse(DateTimeFormat, strDate)
 	if err != nil {
-		log.Panic("cannot convert string to dateTime", strDate)
+		log.Panic("cannot convert string to dateTime, ", strDate)
 	}
 	return date
 }
