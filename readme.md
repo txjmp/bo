@@ -1,7 +1,7 @@
 #Bo - A Frontend For BoltDB
 
 **status**  
-Design looks solid. Hope others will give it a try and provide feedback. Testing modules are a bit of a mess and will be cleaning those up.  
+Not an active project, but uses some creative concepts for a key/value datastore. 
   
 **shout out**  
 This readme.md file was created with CuteMarkEd, a free Windows app. It sure made the editing process a lot easier.  
